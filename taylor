@@ -1,1 +1,75 @@
 
+#Taylor diagram, made by Dr. Hassen Babaousmail
+#This algorithem uses a CSV file formt : Observation|Estimation01|Estimation02/Estimation03/
+
+import matplotlib.pyplot as plt
+from matplotlib import rcParams
+import numpy as np
+import pickle
+import skill_metrics as sm
+from sys import version_info
+from sklearn.metrics import mean_squared_error 
+from scipy import stats
+from astropy.table import Table, Column
+import statistics
+from __future__ import division
+import os
+
+path= 'D:/Friends_work/Taylor_Muoses/'
+filenames = os.listdir(path)
+print(filenames)
+font = {'family' : 'times new roman',
+        'weight' : 'normal',
+        'size'   : 30}
+
+# Set the figure properties 
+rcParams["figure.figsize"] = [8.0, 6.4]
+rcParams['lines.linewidth'] = 2.5 # line width for plots
+rcParams.update({'font.size': 22})
+rcParams['font.family'] = ['Times New Roman']
+
+#load the csv files
+
+#filenames=['CSA','BSK','BSH','BWK','BWH']
+sats=['GPCC','CRU','CHIRPS']
+names=['0','observation','GPCC','CRU','CHIRPS','4']
+
+for filename in filenames:  
+    i=1
+    rms_tab= np.array([0,1,2,3] , dtype=np.float64)
+    r_tab  = np.array([0,1,2,3], dtype=np.float64)
+    std_tab= np.array([0,1,2,3], dtype=np.float64)
+    for sat in sats:
+        data=np.genfromtxt(path+filename,delimiter=",")
+        x=data[:,0]
+        y_sat=data[:,i]
+        idx = np.isfinite(x) & np.isfinite(y_sat)
+        xmean=np.nanmean(x)
+        y_satmean =np.nanmean(y_sat)
+        satmean=np.nanmean(y_sat)
+        r,dum= stats.pearsonr(x[idx],y_sat[idx]) 
+        rmsd=np.sqrt(mean_squared_error(x[idx],y_sat[idx]))
+        bias=satmean-xmean
+        rms_tab[i]=rmsd
+        r_tab[i]=r
+        std_tab[i]=statistics.stdev(y_sat)
+        i=i+1
+    std=statistics.stdev(x)
+
+    sdev = np.array([std,std,std_tab[1],std_tab[2],std_tab[3]])
+    crmsd = np.array([0,0,rms_tab[1],rms_tab[2],rms_tab[3]])
+    ccoef = np.array([1,1,r_tab[1],r_tab[2],r_tab[3]])
+    N_rmsd=crmsd/std
+    N_sdev=sdev/std
+   
+    pl=plt.figure(figsize=(10,10), dpi= 50)
+    pl= sm.taylor_diagram(N_sdev,N_rmsd,ccoef,markerLabel=names,markerSize=20,widthOBS=10)
+    #plt.legend(filename,loc='center left',ncol=1,labelspacing=0,prop=font,bbox_to_anchor=(1.1,0.5),fontsize=50)
+    plt.title(filename[0:2])
+   
+    #Write plots to file
+    plt.savefig('D:/Friends_work/Taylor_Muoses_results/'+filename[0:2]+'.tiff',dpi=300,bbox_inches='tight')
+    plt.savefig('D:/Friends_work/Taylor_Muoses_results/'+filename[0:2]+'.eps',dpi=300,bbox_inches='tight')
+    
+    # Show plots
+    plt.show()
