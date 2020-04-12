@@ -1,6 +1,6 @@
 
 #Taylor diagram, made by Dr. Hassen Babaousmail
-#This algorithem uses a CSV file formt : Observation|Estimation01|Estimation02/Estimation03/
+#This algorithm uses this CSV file formt : Observation|Estimation01|Estimation02/Estimation03/
 
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
